@@ -66,7 +66,7 @@ export function openTaskModal({ date = '', taskId = null } = {}) {
   openOverlay();
   document.getElementById('task-title').focus();
 
-  document.getElementById('task-form').addEventListener('submit', (e) => {
+  document.getElementById('task-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const title = document.getElementById('task-title').value.trim();
     const dateVal = document.getElementById('task-date').value;
@@ -74,9 +74,9 @@ export function openTaskModal({ date = '', taskId = null } = {}) {
     if (!title || !dateVal) return;
 
     if (isEdit) {
-      updateTask(taskId, { title, date: dateVal, goalId });
+      await updateTask(taskId, { title, date: dateVal, goalId });
     } else {
-      addTask(title, dateVal, goalId);
+      await addTask(title, dateVal, goalId);
     }
     closeModal();
   });
@@ -84,8 +84,8 @@ export function openTaskModal({ date = '', taskId = null } = {}) {
   document.getElementById('btn-cancel').addEventListener('click', closeModal);
 
   if (isEdit) {
-    document.getElementById('btn-delete-task').addEventListener('click', () => {
-      deleteTask(taskId);
+    document.getElementById('btn-delete-task').addEventListener('click', async () => {
+      await deleteTask(taskId);
       closeModal();
     });
   }
@@ -160,16 +160,16 @@ export function openGoalModal({ goalId = null } = {}) {
     }
   });
 
-  document.getElementById('goal-form').addEventListener('submit', (e) => {
+  document.getElementById('goal-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('goal-name').value.trim();
     const color = document.getElementById('goal-color').value;
     if (!name) return;
 
     if (isEdit) {
-      updateGoal(goalId, { name, color });
+      await updateGoal(goalId, { name, color });
     } else {
-      addGoal(name, color);
+      await addGoal(name, color);
     }
     closeModal();
   });
@@ -177,8 +177,8 @@ export function openGoalModal({ goalId = null } = {}) {
   document.getElementById('btn-cancel').addEventListener('click', closeModal);
 
   if (isEdit) {
-    document.getElementById('btn-delete-goal').addEventListener('click', () => {
-      deleteGoal(goalId);
+    document.getElementById('btn-delete-goal').addEventListener('click', async () => {
+      await deleteGoal(goalId);
       closeModal();
     });
   }

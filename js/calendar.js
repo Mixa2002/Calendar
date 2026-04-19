@@ -204,13 +204,13 @@ function wireEvents(container) {
 
   // Task pills
   container.querySelectorAll('.task-pill').forEach(pill => {
-    pill.addEventListener('click', (e) => {
+    pill.addEventListener('click', async (e) => {
       if (e.target.closest('.task-edit')) return;
       e.stopPropagation();
       // Add toggle animation
       pill.classList.add('just-toggled');
       setTimeout(() => pill.classList.remove('just-toggled'), 300);
-      toggleTask(pill.dataset.taskId);
+      await toggleTask(pill.dataset.taskId);
       renderCalendar();
       renderDashboard();
     });
