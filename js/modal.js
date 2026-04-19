@@ -1,8 +1,12 @@
 import { loadGoals, addTask, updateTask, deleteTask, addGoal, updateGoal, deleteGoal, getTasksForGoal } from './store.js';
 import { loadTasks } from './store.js';
-import { GOAL_COLORS } from './store.js';
+import { GOAL_COLORS, COLOR_NAMES } from './store.js';
+import { escapeHtml } from './utils.js';
 
 let onCloseCallback = null;
+let focusTrapCleanup = null;
+let triggerElement = null;
+let didMutate = false;
 
 export function setOnClose(cb) {
   onCloseCallback = cb;
@@ -11,19 +15,66 @@ export function setOnClose(cb) {
 function getOverlay() { return document.getElementById('modal-overlay'); }
 function getContent() { return document.getElementById('modal-content'); }
 
-export function closeModal() {
-  getOverlay().classList.remove('open');
-  getContent().innerHTML = '';
-  if (onCloseCallback) onCloseCallback();
+export function closeModal({ mutated = didMutate } = {}) {
+  const overlay = getOverlay();
+  const content = getContent();
+  if (!overlay?.classList.contains('open')) return;
+
+  overlay.classList.remove('open');
+  content.innerHTML = '';
+  document.getElementById('app-container')?.removeAttribute('aria-hidden');
+  if (focusTrapCleanup) {
+    focusTrapCleanup();
+    focusTrapCleanup = null;
+  }
+  if (triggerElement) {
+    triggerElement.focus();
+    triggerElement = null;
+  }
+  didMutate = false;
+  if (onCloseCallback) onCloseCallback(mutated);
 }
 
 function openOverlay() {
-  getOverlay().classList.add('open');
+  const overlay = getOverlay();
+  const modal = getContent();
+  overlay.classList.add('open');
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  document.getElementById('app-container')?.setAttribute('aria-hidden', 'true');
+  const heading = modal.querySelector('h3');
+  if (heading) {
+    heading.id = 'modal-heading';
+    modal.setAttribute('aria-labelledby', 'modal-heading');
+  }
+  trapFocus(modal);
+}
+
+function trapFocus(container) {
+  const sel = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+  function handleKeydown(e) {
+    if (e.key !== 'Tab') return;
+    const focusable = [...container.querySelectorAll(sel)];
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+    } else {
+      if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  }
+
+  document.addEventListener('keydown', handleKeydown);
+  focusTrapCleanup = () => document.removeEventListener('keydown', handleKeydown);
 }
 
 // --- Task Modal ---
 
 export function openTaskModal({ date = '', taskId = null } = {}) {
+  triggerElement = document.activeElement;
+  didMutate = false;
   const isEdit = !!taskId;
   let task = null;
   if (isEdit) {
@@ -55,6 +106,7 @@ export function openTaskModal({ date = '', taskId = null } = {}) {
           ${goalOptions}
         </select>
       </div>
+      <div id="modal-error" class="modal-error" role="alert" aria-live="assertive"></div>
       <div class="modal-actions">
         ${isEdit ? '<button type="button" class="btn btn-danger" id="btn-delete-task">Delete</button>' : ''}
         <button type="button" class="btn btn-ghost" id="btn-cancel">Cancel</button>
@@ -68,25 +120,39 @@ export function openTaskModal({ date = '', taskId = null } = {}) {
 
   document.getElementById('task-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    hideModalError();
     const title = document.getElementById('task-title').value.trim();
     const dateVal = document.getElementById('task-date').value;
     const goalId = document.getElementById('task-goal').value || null;
     if (!title || !dateVal) return;
+    const submitBtn = e.submitter;
+    if (submitBtn) submitBtn.disabled = true;
 
-    if (isEdit) {
-      await updateTask(taskId, { title, date: dateVal, goalId });
-    } else {
-      await addTask(title, dateVal, goalId);
+    try {
+      if (isEdit) {
+        await updateTask(taskId, { title, date: dateVal, goalId });
+      } else {
+        await addTask(title, dateVal, goalId);
+      }
+      closeModal({ mutated: true });
+    } catch (err) {
+      if (submitBtn) submitBtn.disabled = false;
+      showModalError(err.message);
     }
-    closeModal();
   });
 
   document.getElementById('btn-cancel').addEventListener('click', closeModal);
 
   if (isEdit) {
     document.getElementById('btn-delete-task').addEventListener('click', async () => {
-      await deleteTask(taskId);
-      closeModal();
+      if (!confirm('Delete this task? This cannot be undone.')) return;
+      hideModalError();
+      try {
+        await deleteTask(taskId);
+        closeModal({ mutated: true });
+      } catch (err) {
+        showModalError(err.message);
+      }
     });
   }
 }
@@ -94,6 +160,8 @@ export function openTaskModal({ date = '', taskId = null } = {}) {
 // --- Goal Modal with color picker ---
 
 export function openGoalModal({ goalId = null } = {}) {
+  triggerElement = document.activeElement;
+  didMutate = false;
   const isEdit = !!goalId;
   let goal = null;
   if (isEdit) {
@@ -104,9 +172,10 @@ export function openGoalModal({ goalId = null } = {}) {
   const linkedCount = isEdit ? getTasksForGoal(goalId).length : 0;
   const selectedColor = goal ? goal.color : GOAL_COLORS[0];
 
-  const swatchesHtml = GOAL_COLORS.map(c =>
-    `<div class="color-swatch${c === selectedColor ? ' selected' : ''}" data-color="${c}" style="background:${c}" role="radio" aria-checked="${c === selectedColor}" aria-label="Color ${c}" tabindex="0"></div>`
-  ).join('');
+  const swatchesHtml = GOAL_COLORS.map((c, i) => {
+    const isSelected = c === selectedColor;
+    return `<div class="color-swatch${isSelected ? ' selected' : ''}" data-color="${c}" style="background:${c}" role="radio" aria-checked="${isSelected}" aria-label="${COLOR_NAMES[c] || c}" tabindex="${isSelected ? '0' : '-1'}"></div>`;
+  }).join('');
 
   getContent().innerHTML = `
     <h3>${isEdit ? 'Edit Goal' : 'New Goal'}</h3>
@@ -122,6 +191,7 @@ export function openGoalModal({ goalId = null } = {}) {
         </div>
         <input type="hidden" id="goal-color" value="${selectedColor}">
       </div>
+      <div id="modal-error" class="modal-error" role="alert" aria-live="assertive"></div>
       <div class="modal-actions">
         ${isEdit ? `<button type="button" class="btn btn-danger" id="btn-delete-goal">Delete${linkedCount > 0 ? ` (${linkedCount} tasks)` : ''}</button>` : ''}
         <button type="button" class="btn btn-ghost" id="btn-cancel">Cancel</button>
@@ -139,9 +209,11 @@ export function openGoalModal({ goalId = null } = {}) {
     picker.querySelectorAll('.color-swatch').forEach(s => {
       s.classList.remove('selected');
       s.setAttribute('aria-checked', 'false');
+      s.setAttribute('tabindex', '-1');
     });
     swatch.classList.add('selected');
     swatch.setAttribute('aria-checked', 'true');
+    swatch.setAttribute('tabindex', '0');
     document.getElementById('goal-color').value = swatch.dataset.color;
   };
 
@@ -157,42 +229,85 @@ export function openGoalModal({ goalId = null } = {}) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       selectSwatch(swatch);
+      return;
+    }
+    // Arrow key navigation
+    const swatches = [...picker.querySelectorAll('.color-swatch')];
+    const current = swatches.indexOf(swatch);
+    let next = -1;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      next = (current + 1) % swatches.length;
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      next = (current - 1 + swatches.length) % swatches.length;
+    }
+    if (next !== -1) {
+      selectSwatch(swatches[next]);
+      swatches[next].focus();
     }
   });
 
   document.getElementById('goal-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    hideModalError();
     const name = document.getElementById('goal-name').value.trim();
     const color = document.getElementById('goal-color').value;
     if (!name) return;
+    const submitBtn = e.submitter;
+    if (submitBtn) submitBtn.disabled = true;
 
-    if (isEdit) {
-      await updateGoal(goalId, { name, color });
-    } else {
-      await addGoal(name, color);
+    try {
+      if (isEdit) {
+        await updateGoal(goalId, { name, color });
+      } else {
+        await addGoal(name, color);
+      }
+      closeModal({ mutated: true });
+    } catch (err) {
+      if (submitBtn) submitBtn.disabled = false;
+      showModalError(err.message);
     }
-    closeModal();
   });
 
   document.getElementById('btn-cancel').addEventListener('click', closeModal);
 
   if (isEdit) {
     document.getElementById('btn-delete-goal').addEventListener('click', async () => {
-      await deleteGoal(goalId);
-      closeModal();
+      const msg = linkedCount > 0
+        ? `Delete this goal? ${linkedCount} linked task(s) will be unlinked. This cannot be undone.`
+        : 'Delete this goal? This cannot be undone.';
+      if (!confirm(msg)) return;
+      hideModalError();
+      try {
+        await deleteGoal(goalId);
+        closeModal({ mutated: true });
+      } catch (err) {
+        showModalError(err.message);
+      }
     });
   }
 }
 
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+function showModalError(msg) {
+  const el = document.getElementById('modal-error');
+  if (el) {
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+}
+
+function hideModalError() {
+  const el = document.getElementById('modal-error');
+  if (el) {
+    el.textContent = '';
+    el.style.display = 'none';
+  }
 }
 
 // Close on overlay click or Escape
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Escape' && getOverlay()?.classList.contains('open')) closeModal();
 });
 
 document.getElementById('modal-overlay')?.addEventListener('click', (e) => {

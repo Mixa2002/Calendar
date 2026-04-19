@@ -1,20 +1,19 @@
-import { formatDate, getDaysInRange, getMonday, getMonthLabel, isToday } from './utils.js';
+import { formatDate, getDaysInRange, getMonday, getMonthLabel, isToday, escapeHtml, sanitizeColor, getContrastTextColor, announce, showAppMessage, clearAppMessage } from './utils.js';
 import { getTasksForDate, toggleTask, getGoalById } from './store.js';
 import { openTaskModal } from './modal.js';
 import { renderDashboard } from './dashboard.js';
 
-let viewMode = '3weeks'; // '3weeks' or 'month'
-let monthOffset = 0; // 0 = current month, +1 = next, -1 = prev
+let viewMode = '3weeks';
+let monthOffset = 0;
 
 export function renderCalendar() {
   const container = document.getElementById('calendar-panel');
   const todayStr = formatDate(new Date());
 
-  // Toolbar: view toggle + month nav
   let html = '<div class="calendar-toolbar">';
-  html += '<div class="view-toggle">';
-  html += `<button class="${viewMode === '3weeks' ? 'active' : ''}" data-mode="3weeks">3 Weeks</button>`;
-  html += `<button class="${viewMode === 'month' ? 'active' : ''}" data-mode="month">Month</button>`;
+  html += '<div class="view-toggle" role="group" aria-label="Calendar view">';
+  html += `<button class="${viewMode === '3weeks' ? 'active' : ''}" data-mode="3weeks" aria-pressed="${viewMode === '3weeks'}">3 Weeks</button>`;
+  html += `<button class="${viewMode === 'month' ? 'active' : ''}" data-mode="month" aria-pressed="${viewMode === 'month'}">Month</button>`;
   html += '</div>';
 
   if (viewMode === 'month') {
@@ -41,7 +40,7 @@ export function renderCalendar() {
   }
 
   container.innerHTML = html;
-  wireEvents(container, todayStr);
+  wireEvents(container);
 }
 
 function getWeekLabel(monday) {
@@ -50,13 +49,12 @@ function getWeekLabel(monday) {
   const opts = { month: 'short', day: 'numeric' };
   const startLabel = monday.toLocaleDateString('en-US', opts);
   const endLabel = sunday.toLocaleDateString('en-US', opts);
-  // Get ISO week number
   const d = new Date(Date.UTC(monday.getFullYear(), monday.getMonth(), monday.getDate()));
   const dayNum = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-  return `Week ${weekNo}  ·  ${startLabel} – ${endLabel}`;
+  return `Week ${weekNo} | ${startLabel} - ${endLabel}`;
 }
 
 function renderThreeWeeks(todayStr) {
@@ -66,18 +64,15 @@ function renderThreeWeeks(todayStr) {
   const months = new Set(days.map(d => getMonthLabel(d)));
   const headerText = [...months].join(' / ');
 
-  let html = `<div class="calendar-header">${headerText}</div>`;
-  html += '<div class="calendar-grid">';
+  let html = `<h2 class="calendar-header">${headerText}</h2>`;
+  html += '<div class="calendar-grid" role="grid" aria-label="Calendar">';
   html += dayLabelsHtml();
 
   for (let i = 0; i < days.length; i++) {
-    // Insert week label at the start of each week
     if (i % 7 === 0) {
-      const weekMonday = days[i];
-      html += `<div class="week-label">${getWeekLabel(weekMonday)}</div>`;
+      html += `<div class="week-label" role="row">${getWeekLabel(days[i])}</div>`;
     }
-    const weekIndex = Math.floor(i / 7);
-    const isAlt = weekIndex % 2 === 1;
+    const isAlt = Math.floor(i / 7) % 2 === 1;
     html += renderDayCell(days[i], todayStr, false, isAlt);
   }
 
@@ -92,11 +87,9 @@ function renderMonth(todayStr) {
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
 
-  // Find the Monday on or before the 1st of the month
   const firstOfMonth = new Date(year, month, 1);
   const startMonday = getMonday(firstOfMonth);
 
-  // Find the last day of the month, then the Sunday on or after
   const lastOfMonth = new Date(year, month + 1, 0);
   const lastDay = lastOfMonth.getDay();
   const endSunday = new Date(lastOfMonth);
@@ -107,13 +100,12 @@ function renderMonth(todayStr) {
   const dayCount = Math.round((endSunday - startMonday) / (1000 * 60 * 60 * 24)) + 1;
   const days = getDaysInRange(startMonday, dayCount);
 
-  let html = '<div class="calendar-grid">';
+  let html = '<div class="calendar-grid" role="grid" aria-label="Calendar">';
   html += dayLabelsHtml();
 
   for (let i = 0; i < days.length; i++) {
     const isOtherMonth = days[i].getMonth() !== month;
-    const weekIndex = Math.floor(i / 7);
-    const isAlt = weekIndex % 2 === 1;
+    const isAlt = Math.floor(i / 7) % 2 === 1;
     html += renderDayCell(days[i], todayStr, isOtherMonth, isAlt);
   }
 
@@ -122,8 +114,9 @@ function renderMonth(todayStr) {
 }
 
 function dayLabelsHtml() {
-  return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    .map(l => `<div class="calendar-day-label">${l}</div>`)
+  const fullNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  return fullNames
+    .map(name => `<div class="calendar-day-label" role="columnheader" aria-label="${name}" title="${name}">${name.slice(0, 3)}</div>`)
     .join('');
 }
 
@@ -138,23 +131,28 @@ function renderDayCell(day, todayStr, isOtherMonth, isAlt = false) {
   if (isAlt) classes.push('week-alt');
 
   const tasks = getTasksForDate(dateStr);
+  const dayLabel = day.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const taskCount = tasks.length > 0 ? `, ${tasks.length} task${tasks.length > 1 ? 's' : ''}` : ', no tasks';
 
   let tasksHtml = '';
   for (const task of tasks) {
     const goal = task.goalId ? getGoalById(task.goalId) : null;
     const doneClass = task.done ? ' done' : '';
-    const bgColor = goal ? goal.color : '';
-    const textColor = goal ? '#fff' : '';
+    const bgColor = goal ? sanitizeColor(goal.color) : '';
+    const textColor = goal ? getContrastTextColor(goal.color) : '';
     const style = bgColor ? `style="background:${bgColor};color:${textColor}"` : '';
     tasksHtml += `
-      <div class="task-pill${doneClass}" data-task-id="${task.id}" ${style}>
+      <div class="task-pill${doneClass}" data-task-id="${task.id}" ${style}
+           role="checkbox" aria-checked="${task.done}" tabindex="0"
+           aria-label="${escapeHtml(task.title)}${task.done ? ' (completed)' : ''}">
         <span class="task-title">${escapeHtml(task.title)}</span>
-        <button class="task-edit" data-edit-task="${task.id}" title="Edit" aria-label="Edit task">&#9998;</button>
+        <button class="task-edit" data-edit-task="${task.id}" title="Edit task" aria-label="Edit task: ${escapeHtml(task.title)}">&#9998;</button>
       </div>`;
   }
 
   return `
-    <div class="${classes.join(' ')}" data-date="${dateStr}">
+    <div class="${classes.join(' ')}" data-date="${dateStr}" tabindex="0" role="gridcell"
+         aria-label="${dayLabel}${taskCount}">
       <div class="day-number">${day.getDate()}</div>
       <div class="day-tasks">${tasksHtml}</div>
       <div class="day-add" role="button" tabindex="0" aria-label="Add task on ${dateStr}">+ add task</div>
@@ -200,19 +198,43 @@ function wireEvents(container) {
       if (e.target.closest('.task-pill') || e.target.closest('.day-add')) return;
       openTaskModal({ date: dateStr });
     });
+
+    cell.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        if (!e.target.closest('.task-pill') && !e.target.closest('.day-add')) {
+          e.preventDefault();
+          openTaskModal({ date: dateStr });
+        }
+      }
+    });
   });
 
   // Task pills
   container.querySelectorAll('.task-pill').forEach(pill => {
-    pill.addEventListener('click', async (e) => {
+    const handleToggle = async (e) => {
       if (e.target.closest('.task-edit')) return;
       e.stopPropagation();
-      // Add toggle animation
       pill.classList.add('just-toggled');
       setTimeout(() => pill.classList.remove('just-toggled'), 300);
-      await toggleTask(pill.dataset.taskId);
-      renderCalendar();
-      renderDashboard();
+      const wasDone = pill.getAttribute('aria-checked') === 'true';
+      try {
+        await toggleTask(pill.dataset.taskId);
+        clearAppMessage();
+        announce(wasDone ? 'Task marked as incomplete' : 'Task marked as complete');
+        renderCalendar();
+        renderDashboard();
+      } catch (err) {
+        showAppMessage(err.message || 'Failed to update task.');
+        announce('Failed to update task');
+      }
+    };
+
+    pill.addEventListener('click', handleToggle);
+    pill.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleToggle(e);
+      }
     });
   });
 
@@ -223,10 +245,4 @@ function wireEvents(container) {
       openTaskModal({ taskId: btn.dataset.editTask });
     });
   });
-}
-
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
 }

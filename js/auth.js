@@ -1,6 +1,6 @@
 import { supabase } from './supabase.js';
 
-export function renderAuthScreen() {
+export function renderAuthScreen(initialError = '') {
   const container = document.getElementById('auth-screen');
   container.innerHTML = `
     <div class="auth-card">
@@ -56,10 +56,17 @@ export function renderAuthScreen() {
     hideError();
 
     let result;
-    if (mode === 'login') {
-      result = await supabase.auth.signInWithPassword({ email, password });
-    } else {
-      result = await supabase.auth.signUp({ email, password });
+    try {
+      if (mode === 'login') {
+        result = await supabase.auth.signInWithPassword({ email, password });
+      } else {
+        result = await supabase.auth.signUp({ email, password });
+      }
+    } catch (err) {
+      showError(err?.message || 'Unable to reach authentication service. Please try again.');
+      submitBtn.disabled = false;
+      submitBtn.textContent = mode === 'login' ? 'Log In' : 'Sign Up';
+      return;
     }
 
     if (result.error) {
@@ -80,6 +87,10 @@ export function renderAuthScreen() {
 
     // Auth state change listener in app.js will handle the rest
   });
+
+  if (initialError) {
+    showError(initialError);
+  }
 }
 
 function showError(msg) {
@@ -100,5 +111,5 @@ export function showAuthScreen() {
 
 export function showApp() {
   document.getElementById('auth-screen').style.display = 'none';
-  document.getElementById('app-container').style.display = 'contents';
+  document.getElementById('app-container').style.display = 'block';
 }

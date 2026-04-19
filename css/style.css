@@ -15,15 +15,15 @@
   --border-light: #e8dcc6;
   --text: #2d2a24;
   --text-secondary: #5a5549;
-  --text-muted: #8a8275;
-  --text-faint: #b0a894;
+  --text-muted: #6b6459;
+  --text-faint: #8a8275;
   --primary: #546B41;
   --primary-hover: #455a34;
-  --primary-light: #99AD7A;
+  --primary-light: #6b8a4f;
   --primary-lightest: #dde7d0;
   --today-bg: #eaf2e2;
   --today-border: #546B41;
-  --done-text: #b0a894;
+  --done-text: #a09888;
   --danger: #b5402a;
   --danger-hover: #943322;
   --overlay: rgba(30, 28, 24, 0.45);
@@ -98,14 +98,26 @@ body {
 }
 
 .nav-title {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 800;
   color: var(--primary);
   letter-spacing: -0.3px;
 }
 
 .nav-spacer {
   flex: 1;
+}
+
+.app-message {
+  margin: 16px 20px 0;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: var(--danger);
+  font-size: 14px;
+  line-height: 1.4;
+  box-shadow: var(--shadow-xs);
 }
 
 /* --------------------------------------------------------------------------
@@ -144,6 +156,11 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+.btn-primary:active {
+  background: #3a4d2a;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
 .btn-danger {
   background: var(--danger);
   color: #fff;
@@ -151,6 +168,11 @@ body {
 
 .btn-danger:hover {
   background: var(--danger-hover);
+}
+
+.btn-danger:active {
+  background: #7a2a1b;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .btn-ghost {
@@ -184,7 +206,7 @@ body {
   background: var(--surface);
   border-left: 1px solid var(--border-light);
   overflow-y: auto;
-  padding: 20px;
+  padding: 24px;
   scroll-behavior: smooth;
 }
 
@@ -196,7 +218,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  padding: 16px 20px 8px;
+  padding: 16px 20px 12px;
   flex-wrap: wrap;
 }
 
@@ -236,6 +258,12 @@ body {
   background: var(--primary);
   color: #fff;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.view-toggle button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+  z-index: 1;
 }
 
 /* --------------------------------------------------------------------------
@@ -361,6 +389,10 @@ body {
   background: #f5efe1;
 }
 
+.calendar-day:active {
+  background: #f0ebdf;
+}
+
 /* Today cell - premium highlight */
 .calendar-day.today {
   background: var(--today-bg);
@@ -372,11 +404,28 @@ body {
 }
 
 .calendar-day.past {
-  opacity: 0.55;
+  background: #f9f4e9;
+}
+
+.calendar-day.past .day-number,
+.calendar-day.past .day-add {
+  opacity: 0.6;
+}
+
+.calendar-day.past .task-pill {
+  opacity: 0.7;
 }
 
 .calendar-day.other-month {
-  opacity: 0.35;
+  background: #f5f0e4;
+}
+
+.calendar-day.other-month .day-number {
+  opacity: 0.45;
+}
+
+.calendar-day.other-month .task-pill {
+  opacity: 0.5;
 }
 
 /* --------------------------------------------------------------------------
@@ -503,7 +552,8 @@ body {
   color: var(--primary);
 }
 
-.calendar-day:hover .day-add {
+.calendar-day:hover .day-add,
+.calendar-day:focus-within .day-add {
   opacity: 1;
 }
 
@@ -530,7 +580,7 @@ body {
    16. Dashboard Sidebar
    -------------------------------------------------------------------------- */
 .dashboard-panel h2 {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   margin-bottom: 16px;
   color: var(--primary);
@@ -555,8 +605,8 @@ body {
 .goal-card {
   border: 1px solid var(--border-light);
   border-radius: var(--radius);
-  padding: 14px;
-  margin-bottom: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
   cursor: pointer;
   transition: all var(--transition);
   background: var(--surface);
@@ -598,7 +648,7 @@ body {
 
 .goal-stats {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
   white-space: nowrap;
   background: var(--bg);
@@ -725,6 +775,7 @@ body {
 
 .empty-state p {
   margin-bottom: 8px;
+  font-size: 16px;
 }
 
 .empty-state .empty-icon {
@@ -772,6 +823,11 @@ body {
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text);
 }
 
+.color-swatch:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
 /* --------------------------------------------------------------------------
    23. Modal Overlay
    -------------------------------------------------------------------------- */
@@ -804,7 +860,7 @@ body {
 .modal {
   background: var(--surface);
   border-radius: var(--radius-lg);
-  padding: 28px;
+  padding: 32px;
   width: 420px;
   max-width: 100%;
   box-shadow: var(--shadow-xl);
@@ -945,6 +1001,10 @@ body {
   .calendar-toolbar {
     padding: 12px 12px 6px;
     gap: 10px;
+  }
+
+  .app-message {
+    margin: 12px 10px 0;
   }
 
   .calendar-grid {
@@ -1088,6 +1148,11 @@ body {
     margin: 0 6px 10px;
   }
 
+  .app-message {
+    margin: 10px 6px 0;
+    font-size: 13px;
+  }
+
   .calendar-toolbar {
     padding: 10px 8px 4px;
   }
@@ -1162,7 +1227,7 @@ button:focus-visible {
   padding: 40px 36px;
   width: 400px;
   max-width: 100%;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-xl);
   border: 1px solid var(--border-light);
 }
 
@@ -1172,6 +1237,13 @@ button:focus-visible {
 }
 
 .auth-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary-lightest);
   color: var(--primary);
   margin-bottom: 12px;
 }
@@ -1225,9 +1297,9 @@ button:focus-visible {
 .auth-submit {
   width: 100%;
   justify-content: center;
-  padding: 12px;
+  padding: 14px;
   font-size: 15px;
-  margin-top: 4px;
+  margin-top: 12px;
 }
 
 .auth-error {
@@ -1248,5 +1320,85 @@ button:focus-visible {
 
   .auth-header h1 {
     font-size: 20px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   32. Skip Link
+   -------------------------------------------------------------------------- */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  padding: 8px 16px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 200;
+  text-decoration: none;
+  transition: top var(--transition);
+}
+
+.skip-link:focus {
+  top: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   33. Screen Reader Only
+   -------------------------------------------------------------------------- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   34. Modal Error
+   -------------------------------------------------------------------------- */
+.modal-error {
+  display: none;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: var(--danger);
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin-top: 8px;
+  line-height: 1.4;
+  animation: shakeError 0.3s ease;
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* --------------------------------------------------------------------------
+   35. Goal Empty Tasks
+   -------------------------------------------------------------------------- */
+.goal-empty-tasks {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-style: italic;
+  padding: 6px 0;
+}
+
+/* --------------------------------------------------------------------------
+   36. Reduced Motion
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

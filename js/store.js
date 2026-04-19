@@ -1,33 +1,60 @@
 import { supabase } from './supabase.js';
+import { sanitizeColor } from './utils.js';
 
 export const GOAL_COLORS = [
-  '#4f46e5', '#059669', '#d97706', '#dc2626', '#7c3aed',
-  '#0891b2', '#be185d', '#65a30d', '#ea580c', '#6366f1',
+  '#546B41', '#b45309', '#0f766e', '#92400e', '#7c3aed',
+  '#0891b2', '#be185d', '#4d7c0f', '#b91c1c', '#6d5a3a',
 ];
 
-// In-memory cache — rendering reads from here (synchronous)
+export const COLOR_NAMES = {
+  '#546B41': 'Forest',
+  '#b45309': 'Amber',
+  '#0f766e': 'Teal',
+  '#92400e': 'Bronze',
+  '#7c3aed': 'Purple',
+  '#0891b2': 'Cyan',
+  '#be185d': 'Pink',
+  '#4d7c0f': 'Olive',
+  '#b91c1c': 'Red',
+  '#6d5a3a': 'Walnut',
+};
+
+// In-memory cache; rendering reads from here synchronously.
 let goalsCache = [];
 let tasksCache = [];
+
+function throwIfError(error, message) {
+  if (error) throw new Error(message);
+}
+
+async function requireUser() {
+  const { data, error } = await supabase.auth.getUser();
+  throwIfError(error, 'Failed to verify your session.');
+  if (!data.user) {
+    throw new Error('Your session expired. Please log in again.');
+  }
+  return data.user;
+}
 
 // --- Data loading (call on init and after mutations) ---
 
 export async function refreshData() {
-  const { data: goals } = await supabase
-    .from('goals')
-    .select('*')
-    .order('created_at', { ascending: true });
-  goalsCache = (goals || []).map(g => ({
+  const [goalsResult, tasksResult] = await Promise.all([
+    supabase.from('goals').select('*').order('created_at', { ascending: true }),
+    supabase.from('tasks').select('*').order('created_at', { ascending: true }),
+  ]);
+
+  throwIfError(goalsResult.error, 'Failed to load goals.');
+  throwIfError(tasksResult.error, 'Failed to load tasks.');
+
+  goalsCache = (goalsResult.data || []).map(g => ({
     id: g.id,
     name: g.name,
-    color: g.color,
+    color: sanitizeColor(g.color),
     createdAt: g.created_at,
   }));
 
-  const { data: tasks } = await supabase
-    .from('tasks')
-    .select('*')
-    .order('created_at', { ascending: true });
-  tasksCache = (tasks || []).map(t => ({
+  tasksCache = (tasksResult.data || []).map(t => ({
     id: t.id,
     title: t.title,
     date: t.date,
@@ -72,38 +99,40 @@ export function getGoalCompletion(goalId) {
 // --- Async mutations (write to Supabase, then refresh cache) ---
 
 export async function addGoal(name, color = GOAL_COLORS[0]) {
-  const { data: { user } } = await supabase.auth.getUser();
-  await supabase.from('goals').insert({
+  const user = await requireUser();
+  const { error } = await supabase.from('goals').insert({
     name,
-    color,
+    color: sanitizeColor(color),
     user_id: user.id,
   });
+  throwIfError(error, 'Failed to create goal.');
   await refreshData();
 }
 
 export async function updateGoal(id, fields) {
   const updates = {};
   if (fields.name !== undefined) updates.name = fields.name;
-  if (fields.color !== undefined) updates.color = fields.color;
-  await supabase.from('goals').update(updates).eq('id', id);
+  if (fields.color !== undefined) updates.color = sanitizeColor(fields.color);
+  const { error } = await supabase.from('goals').update(updates).eq('id', id);
+  throwIfError(error, 'Failed to update goal.');
   await refreshData();
 }
 
 export async function deleteGoal(id) {
-  // Unlink tasks first
-  await supabase.from('tasks').update({ goal_id: null }).eq('goal_id', id);
-  await supabase.from('goals').delete().eq('id', id);
+  const { error } = await supabase.from('goals').delete().eq('id', id);
+  throwIfError(error, 'Failed to delete goal.');
   await refreshData();
 }
 
 export async function addTask(title, date, goalId = null) {
-  const { data: { user } } = await supabase.auth.getUser();
-  await supabase.from('tasks').insert({
+  const user = await requireUser();
+  const { error } = await supabase.from('tasks').insert({
     title,
     date,
     goal_id: goalId,
     user_id: user.id,
   });
+  throwIfError(error, 'Failed to create task.');
   await refreshData();
 }
 
@@ -113,18 +142,21 @@ export async function updateTask(id, fields) {
   if (fields.date !== undefined) updates.date = fields.date;
   if (fields.goalId !== undefined) updates.goal_id = fields.goalId;
   if (fields.done !== undefined) updates.done = fields.done;
-  await supabase.from('tasks').update(updates).eq('id', id);
+  const { error } = await supabase.from('tasks').update(updates).eq('id', id);
+  throwIfError(error, 'Failed to update task.');
   await refreshData();
 }
 
 export async function deleteTask(id) {
-  await supabase.from('tasks').delete().eq('id', id);
+  const { error } = await supabase.from('tasks').delete().eq('id', id);
+  throwIfError(error, 'Failed to delete task.');
   await refreshData();
 }
 
 export async function toggleTask(id) {
   const task = tasksCache.find(t => t.id === id);
-  if (!task) return;
-  await supabase.from('tasks').update({ done: !task.done }).eq('id', id);
+  if (!task) throw new Error('Task no longer exists.');
+  const { error } = await supabase.from('tasks').update({ done: !task.done }).eq('id', id);
+  throwIfError(error, 'Failed to update task.');
   await refreshData();
 }
