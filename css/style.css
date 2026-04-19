@@ -1,0 +1,1143 @@
+/* ==========================================================================
+   Calendar & Goals App - Premium UI Stylesheet
+   Theme: Earthy green & cream
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. CSS Custom Properties
+   -------------------------------------------------------------------------- */
+:root {
+  --bg: #FFF8EC;
+  --bg-subtle: #fdf4e2;
+  --surface: #ffffff;
+  --surface-elevated: #ffffff;
+  --border: #DCCCAC;
+  --border-light: #e8dcc6;
+  --text: #2d2a24;
+  --text-secondary: #5a5549;
+  --text-muted: #8a8275;
+  --text-faint: #b0a894;
+  --primary: #546B41;
+  --primary-hover: #455a34;
+  --primary-light: #99AD7A;
+  --primary-lightest: #dde7d0;
+  --today-bg: #eaf2e2;
+  --today-border: #546B41;
+  --done-text: #b0a894;
+  --danger: #b5402a;
+  --danger-hover: #943322;
+  --overlay: rgba(30, 28, 24, 0.45);
+  --pill-default: #DCCCAC;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  --shadow-xs: 0 1px 2px rgba(84, 107, 65, 0.06);
+  --shadow-sm: 0 1px 3px rgba(84, 107, 65, 0.08), 0 1px 2px rgba(84, 107, 65, 0.04);
+  --shadow-md: 0 4px 12px rgba(84, 107, 65, 0.08), 0 1px 3px rgba(84, 107, 65, 0.06);
+  --shadow-lg: 0 8px 24px rgba(84, 107, 65, 0.10), 0 2px 6px rgba(84, 107, 65, 0.06);
+  --shadow-xl: 0 20px 60px rgba(30, 28, 24, 0.15), 0 4px 16px rgba(84, 107, 65, 0.08);
+
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --transition-fast: 0.12s ease;
+  --transition: 0.2s ease;
+  --transition-slow: 0.35s ease;
+}
+
+/* --------------------------------------------------------------------------
+   2. Reset & Base
+   -------------------------------------------------------------------------- */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.55;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Subtle dot pattern for depth */
+  background-image: radial-gradient(circle at 1px 1px, rgba(84, 107, 65, 0.03) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* --------------------------------------------------------------------------
+   3. Navigation Bar
+   -------------------------------------------------------------------------- */
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-light);
+  box-shadow: var(--shadow-xs);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-icon {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.nav-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.3px;
+}
+
+.nav-spacer {
+  flex: 1;
+}
+
+/* --------------------------------------------------------------------------
+   4. Buttons
+   -------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 36px;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: var(--shadow-xs);
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background: var(--danger-hover);
+}
+
+.btn-ghost {
+  background: none;
+  color: var(--text-muted);
+}
+
+.btn-ghost:hover {
+  background: var(--bg);
+  color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------------------------
+   5. Layout: Calendar + Dashboard
+   -------------------------------------------------------------------------- */
+.layout {
+  display: flex;
+  gap: 0;
+  min-height: calc(100vh - 57px);
+}
+
+.calendar-panel {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 24px;
+}
+
+.dashboard-panel {
+  width: 340px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-left: 1px solid var(--border-light);
+  overflow-y: auto;
+  padding: 20px;
+  scroll-behavior: smooth;
+}
+
+/* --------------------------------------------------------------------------
+   6. Calendar Toolbar (view toggle + month nav)
+   -------------------------------------------------------------------------- */
+.calendar-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px 20px 8px;
+  flex-wrap: wrap;
+}
+
+.view-toggle {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+}
+
+.view-toggle button {
+  padding: 7px 18px;
+  border: none;
+  background: transparent;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+  min-height: 36px;
+}
+
+.view-toggle button:not(:last-child) {
+  border-right: 1px solid var(--border);
+}
+
+.view-toggle button:hover {
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+}
+
+.view-toggle button.active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* --------------------------------------------------------------------------
+   7. Month Navigation (month view)
+   -------------------------------------------------------------------------- */
+.month-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.month-nav button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  transition: all var(--transition);
+  box-shadow: var(--shadow-xs);
+}
+
+.month-nav button:hover {
+  background: var(--bg-subtle);
+  border-color: var(--primary-light);
+}
+
+.month-nav button:active {
+  transform: scale(0.95);
+}
+
+.month-nav .month-label {
+  font-size: 15px;
+  font-weight: 700;
+  min-width: 160px;
+  text-align: center;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+
+.month-nav .btn-today {
+  width: auto;
+  padding: 0 12px;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  border-color: var(--primary-light);
+  background: var(--primary-lightest);
+}
+
+.month-nav .btn-today:hover {
+  background: var(--primary-light);
+  color: #fff;
+}
+
+/* --------------------------------------------------------------------------
+   8. Calendar Header (3-week label)
+   -------------------------------------------------------------------------- */
+.calendar-header {
+  text-align: center;
+  padding: 10px 20px 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+
+/* --------------------------------------------------------------------------
+   9. Calendar Grid
+   -------------------------------------------------------------------------- */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: var(--border-light);
+  margin: 0 20px 16px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.calendar-day-label {
+  background: var(--primary);
+  padding: 8px 4px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* --------------------------------------------------------------------------
+   10. Calendar Day Cell
+   -------------------------------------------------------------------------- */
+.calendar-day {
+  background: var(--surface);
+  min-height: 110px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  position: relative;
+}
+
+.calendar-day:hover {
+  background: #faf6ee;
+}
+
+/* Week row separators via subtle tint on alternating weeks */
+.calendar-day.week-alt {
+  background: var(--bg-subtle);
+}
+
+.calendar-day.week-alt:hover {
+  background: #f5efe1;
+}
+
+/* Today cell - premium highlight */
+.calendar-day.today {
+  background: var(--today-bg);
+  box-shadow: inset 0 2px 0 var(--today-border);
+}
+
+.calendar-day.today:hover {
+  background: #e2edda;
+}
+
+.calendar-day.past {
+  opacity: 0.55;
+}
+
+.calendar-day.other-month {
+  opacity: 0.35;
+}
+
+/* --------------------------------------------------------------------------
+   11. Day Number
+   -------------------------------------------------------------------------- */
+.day-number {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.today .day-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   12. Day Tasks Container
+   -------------------------------------------------------------------------- */
+.day-tasks {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* --------------------------------------------------------------------------
+   13. Task Pill
+   -------------------------------------------------------------------------- */
+.task-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  border-radius: var(--radius-xs);
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--pill-default);
+  color: var(--text);
+  cursor: pointer;
+  transition: opacity var(--transition), filter var(--transition), transform var(--transition-fast);
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+.task-pill:hover {
+  filter: brightness(0.93);
+  transform: translateY(-1px);
+}
+
+.task-pill.done {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+/* Micro feedback on toggle */
+.task-pill.just-toggled {
+  animation: pill-toggle 0.3s ease;
+}
+
+@keyframes pill-toggle {
+  0% { transform: scale(1); }
+  30% { transform: scale(0.93); }
+  60% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+.task-pill .task-title {
+  flex: 1;
+}
+
+.task-pill .task-edit {
+  opacity: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 11px;
+  color: inherit;
+  padding: 2px 3px;
+  border-radius: var(--radius-xs);
+  transition: opacity var(--transition);
+  min-width: 20px;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task-pill:hover .task-edit {
+  opacity: 0.7;
+}
+
+.task-pill .task-edit:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* --------------------------------------------------------------------------
+   14. "+ add task" Prompt
+   -------------------------------------------------------------------------- */
+.day-add {
+  font-size: 11px;
+  color: var(--primary-light);
+  opacity: 0;
+  margin-top: auto;
+  padding-top: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity var(--transition), color var(--transition);
+}
+
+.day-add:hover {
+  color: var(--primary);
+}
+
+.calendar-day:hover .day-add {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   15. Week Label (3-week view)
+   -------------------------------------------------------------------------- */
+.week-label {
+  grid-column: 1 / -1;
+  background: var(--bg-subtle);
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-top: 1px solid var(--border-light);
+}
+
+.week-label:first-of-type {
+  border-top: none;
+}
+
+/* --------------------------------------------------------------------------
+   16. Dashboard Sidebar
+   -------------------------------------------------------------------------- */
+.dashboard-panel h2 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--primary);
+  letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-panel h2::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 18px;
+  background: var(--primary);
+  border-radius: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   17. Goal Card
+   -------------------------------------------------------------------------- */
+.goal-card {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all var(--transition);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.goal-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-light);
+  transform: translateY(-1px);
+}
+
+.goal-card.expanded {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-light);
+}
+
+.goal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.goal-color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8), var(--shadow-xs);
+}
+
+.goal-name {
+  font-weight: 600;
+  font-size: 14px;
+  flex: 1;
+  color: var(--text);
+}
+
+.goal-stats {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+  background: var(--bg);
+  padding: 2px 8px;
+  border-radius: var(--radius-xl);
+}
+
+/* --------------------------------------------------------------------------
+   18. Progress Bar
+   -------------------------------------------------------------------------- */
+.progress-bar {
+  height: 7px;
+  background: var(--border-light);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+/* Subtle shimmer on progress bar */
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  border-radius: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   19. Goal Tasks List (Expandable)
+   -------------------------------------------------------------------------- */
+.goal-tasks-list {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light);
+  display: none;
+}
+
+.goal-card.expanded .goal-tasks-list {
+  display: block;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.goal-task-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.goal-task-item.done {
+  color: var(--done-text);
+  text-decoration: line-through;
+}
+
+.goal-task-date {
+  color: var(--text-muted);
+  font-size: 11px;
+  min-width: 64px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Expand indicator */
+.goal-expand-icon {
+  color: var(--text-faint);
+  font-size: 10px;
+  transition: transform var(--transition);
+  flex-shrink: 0;
+}
+
+.goal-card.expanded .goal-expand-icon {
+  transform: rotate(180deg);
+}
+
+.goal-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   20. Unlinked Tasks Summary
+   -------------------------------------------------------------------------- */
+.unlinked-summary {
+  padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  margin-top: 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--bg-subtle);
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   21. Empty State
+   -------------------------------------------------------------------------- */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.empty-state p {
+  margin-bottom: 8px;
+}
+
+.empty-state .empty-icon {
+  font-size: 36px;
+  margin-bottom: 12px;
+  display: block;
+  opacity: 0.5;
+}
+
+.empty-state .empty-hint {
+  font-size: 12px;
+  color: var(--text-faint);
+  margin-top: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   22. Color Picker (Goal Modal)
+   -------------------------------------------------------------------------- */
+.color-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 4px 0;
+}
+
+.color-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: var(--shadow-xs);
+  position: relative;
+}
+
+.color-swatch:hover {
+  transform: scale(1.18);
+  box-shadow: var(--shadow-sm);
+}
+
+.color-swatch.selected {
+  border-color: var(--text);
+  transform: scale(1.12);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text);
+}
+
+/* --------------------------------------------------------------------------
+   23. Modal Overlay
+   -------------------------------------------------------------------------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.modal-overlay.open {
+  display: flex;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* --------------------------------------------------------------------------
+   24. Modal
+   -------------------------------------------------------------------------- */
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  width: 420px;
+  max-width: 100%;
+  box-shadow: var(--shadow-xl);
+  animation: modalSlideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--primary);
+  letter-spacing: -0.2px;
+}
+
+/* --------------------------------------------------------------------------
+   25. Form Elements
+   -------------------------------------------------------------------------- */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: all var(--transition);
+  background: var(--bg);
+  min-height: 42px;
+}
+
+.form-group input::placeholder {
+  color: var(--text-faint);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-lightest);
+  background: var(--surface);
+}
+
+.form-group input:hover,
+.form-group select:hover {
+  border-color: var(--primary-light);
+}
+
+/* --------------------------------------------------------------------------
+   26. Modal Actions
+   -------------------------------------------------------------------------- */
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-light);
+}
+
+.modal-actions .btn-danger {
+  margin-right: auto;
+}
+
+/* --------------------------------------------------------------------------
+   27. Responsive Design - Tablet
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .dashboard-panel {
+    width: 280px;
+  }
+
+  .calendar-day {
+    min-height: 90px;
+    padding: 6px;
+  }
+
+  .month-nav .month-label {
+    min-width: 130px;
+    font-size: 14px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   28. Responsive Design - Mobile
+   -------------------------------------------------------------------------- */
+@media (max-width: 720px) {
+  .layout {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .calendar-panel {
+    padding-bottom: 8px;
+  }
+
+  .dashboard-panel {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border-light);
+    padding: 16px;
+    overflow-y: visible;
+  }
+
+  .nav {
+    padding: 12px 16px;
+  }
+
+  .nav-title {
+    font-size: 16px;
+  }
+
+  .calendar-toolbar {
+    padding: 12px 12px 6px;
+    gap: 10px;
+  }
+
+  .calendar-grid {
+    margin: 0 10px 12px;
+    border-radius: var(--radius);
+  }
+
+  .calendar-header {
+    padding: 8px 12px 4px;
+    font-size: 14px;
+  }
+
+  .calendar-day {
+    min-height: 72px;
+    padding: 4px;
+  }
+
+  .calendar-day-label {
+    padding: 6px 2px;
+    font-size: 10px;
+  }
+
+  .day-number {
+    font-size: 12px;
+  }
+
+  .today .day-number {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+
+  .task-pill {
+    font-size: 10px;
+    padding: 2px 5px;
+    min-height: 22px;
+  }
+
+  .day-add {
+    font-size: 10px;
+    /* Always visible on mobile since no hover */
+    opacity: 0.5;
+  }
+
+  .task-pill .task-edit {
+    opacity: 0.5;
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  /* Modal - full width on mobile */
+  .modal {
+    width: 100%;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    max-height: 90vh;
+    padding: 24px 20px;
+  }
+
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  @keyframes modalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .month-nav {
+    gap: 6px;
+  }
+
+  .month-nav .month-label {
+    min-width: 110px;
+    font-size: 13px;
+  }
+
+  .month-nav button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .view-toggle button {
+    padding: 8px 14px;
+    min-height: 38px;
+  }
+
+  /* Goal cards - larger touch targets */
+  .goal-card {
+    padding: 14px;
+  }
+
+  .btn {
+    min-height: 44px;
+    padding: 10px 18px;
+    font-size: 14px;
+  }
+
+  .form-group input,
+  .form-group select {
+    min-height: 44px;
+    font-size: 16px; /* prevents iOS zoom */
+  }
+
+  .color-swatch {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   29. Responsive Design - Very Small Screens
+   -------------------------------------------------------------------------- */
+@media (max-width: 420px) {
+  .calendar-day {
+    min-height: 60px;
+    padding: 3px;
+  }
+
+  .day-number {
+    font-size: 11px;
+  }
+
+  .task-pill {
+    font-size: 9px;
+    padding: 2px 4px;
+    gap: 2px;
+  }
+
+  .nav {
+    padding: 10px 12px;
+  }
+
+  .calendar-grid {
+    margin: 0 6px 10px;
+  }
+
+  .calendar-toolbar {
+    padding: 10px 8px 4px;
+  }
+
+  .view-toggle button {
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+
+  .month-nav .month-label {
+    min-width: 90px;
+    font-size: 12px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   30. Utility & Animation Classes
+   -------------------------------------------------------------------------- */
+
+/* Focus-visible for keyboard users */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Smooth scrollbar for sidebar */
+.dashboard-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dashboard-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dashboard-panel::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.dashboard-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-light);
+}
+
+/* Selection color */
+::selection {
+  background: var(--primary-lightest);
+  color: var(--primary);
+}
