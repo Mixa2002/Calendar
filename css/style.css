@@ -1812,21 +1812,30 @@ button:focus-visible {
     opacity: 0.7;
   }
 
-  /* ── Pill indicator — wraps icon + label as a single unit ────────────── */
+  /* ── Pill indicator ──────────────────────────────────────────────────── */
   .bottom-nav-pill {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 3px;
-    /* Pill dimensions: ~64px wide × 32px tall */
-    min-width: 64px;
-    height: 32px;
-    padding: 0 10px;
+    min-width: 72px;
+    padding: 5px 12px;
     border-radius: 16px;
-    /* Pill background and smooth transition */
     background: transparent;
     transition: background var(--transition), transform var(--transition);
+  }
+
+  /* Active tab: filled green pill so it's unmistakably selected */
+  .bottom-nav-tab.active .bottom-nav-pill {
+    background: var(--primary);
+  }
+
+  /* Active tab label and icon become white on the green pill */
+  .bottom-nav-tab.active .bottom-nav-label,
+  .bottom-nav-tab.active .bottom-nav-icon {
+    color: #fff;
+    stroke: #fff;
   }
 
   .bottom-nav-tab:active .bottom-nav-pill {
@@ -1844,7 +1853,7 @@ button:focus-visible {
   /* ── Label ───────────────────────────────────────────────────────────── */
   .bottom-nav-label {
     font-size: 11px;
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1;
     letter-spacing: 0.1px;
   }
@@ -1868,9 +1877,10 @@ button:focus-visible {
     padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   }
 
-  /* On mobile the layout is a single-column scroll — no fixed height needed */
+  /* On mobile the layout is a single-column scroll — no forced height */
   .layout {
     min-height: 0;
+    align-items: flex-start;
   }
 
   /* ── Dashboard panel: full-width scrollable when active on mobile ─────── */
