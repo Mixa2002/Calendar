@@ -1192,11 +1192,11 @@ input, textarea, select {
   }
 
   .nav {
-    padding: 12px 16px;
+    padding: 10px 16px;
   }
 
   .nav-title {
-    font-size: 16px;
+    font-size: 18px;
   }
 
   .calendar-toolbar {
@@ -1341,6 +1341,13 @@ input, textarea, select {
 /* --------------------------------------------------------------------------
    29. Responsive Design - Very Small Screens
    -------------------------------------------------------------------------- */
+/* ≤480px: icon-only "New Goal" button — hide text, keep the + icon */
+@media (max-width: 480px) {
+  .btn-new-goal-text {
+    display: none;
+  }
+}
+
 @media (max-width: 420px) {
   .calendar-day {
     min-height: 60px;
@@ -1707,8 +1714,15 @@ button:focus-visible {
    extends behind it; padding-top on the nav pushes its content below.
    -------------------------------------------------------------------------- */
 @media (display-mode: standalone) {
+  /* Top nav: frosted glass + safe-area push so content sits below status bar */
   .nav {
     padding-top: calc(14px + env(safe-area-inset-top, 0px));
+    background: rgba(255, 248, 236, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    /* Ensure nav title and buttons remain crisp on top of blurred content */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
   }
 
   @media (max-width: 720px) {
@@ -1716,8 +1730,21 @@ button:focus-visible {
       padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
     }
 
+    /* Bottom nav already carries padding-bottom: env(safe-area-inset-bottom)
+       from the base rule above; restate it here so standalone overrides are
+       explicit and the home-indicator gap is always handled. */
     .bottom-nav {
       padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* Ensure scrollable content is never hidden under the home indicator bar */
+    .layout {
+      padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Goals panel: fill full viewport height between top nav and bottom nav */
+    #app-container[data-active-tab="goals"] #dashboard-panel {
+      min-height: calc(100dvh - var(--nav-height, 64px) - 56px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
     }
   }
 }
@@ -1748,8 +1775,12 @@ button:focus-visible {
     left: 0;
     right: 0;
     z-index: 60;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
+    /* Frosted glass — cream tinted, blurred, like iOS tab bar */
+    background: rgba(255, 248, 236, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    /* Hairline top separator instead of a heavy 1px border */
+    border-top: 0.5px solid rgba(220, 204, 172, 0.6);
     /* 56px bar + home-indicator clearance */
     padding-bottom: env(safe-area-inset-bottom, 0px);
     box-shadow: 0 -1px 8px rgba(84, 107, 65, 0.07);
@@ -1761,7 +1792,6 @@ button:focus-visible {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
     height: 56px;
     border: none;
     background: none;
@@ -1770,6 +1800,7 @@ button:focus-visible {
     font-family: var(--font);
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+    /* Color transition on the tab itself handles icon/label color */
     transition: color var(--transition-fast);
   }
 
@@ -1781,16 +1812,57 @@ button:focus-visible {
     opacity: 0.7;
   }
 
-  .bottom-nav-icon {
-    /* stroke inherits from color */
-    flex-shrink: 0;
+  /* ── Pill indicator — wraps icon + label as a single unit ────────────── */
+  .bottom-nav-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    /* Pill dimensions: ~64px wide × 32px tall */
+    min-width: 64px;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 16px;
+    /* Pill background and smooth transition */
+    background: transparent;
+    transition: background var(--transition), transform var(--transition);
   }
 
+  .bottom-nav-tab.active .bottom-nav-pill {
+    background: var(--primary-lightest);
+  }
+
+  .bottom-nav-tab:active .bottom-nav-pill {
+    transform: scale(0.94);
+  }
+
+  /* ── Icon — active tab gets bolder stroke and slightly larger ─────────── */
+  .bottom-nav-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    stroke-width: 2;
+    transition: width var(--transition), height var(--transition), stroke-width var(--transition);
+  }
+
+  .bottom-nav-tab.active .bottom-nav-icon {
+    width: 24px;
+    height: 24px;
+    stroke-width: 2.5;
+  }
+
+  /* ── Label ───────────────────────────────────────────────────────────── */
   .bottom-nav-label {
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 500;
     line-height: 1;
-    letter-spacing: 0.2px;
+    letter-spacing: 0.1px;
+    transition: font-weight var(--transition);
+  }
+
+  .bottom-nav-tab.active .bottom-nav-label {
+    font-weight: 700;
   }
 
   /* ── Panel visibility controlled by JS activeTab ─────────────────────── */
