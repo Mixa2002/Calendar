@@ -19,7 +19,7 @@
   --text-faint: #8a8275;
   --primary: #546B41;
   --primary-hover: #455a34;
-  --primary-light: #6b8a4f;
+  --primary-light: #4f6a35;
   --primary-lightest: #dde7d0;
   --today-bg: #eaf2e2;
   --today-border: #546B41;
@@ -574,6 +574,186 @@ body {
 
 .week-label:first-of-type {
   border-top: none;
+}
+
+/* --------------------------------------------------------------------------
+   15b. Today View
+   -------------------------------------------------------------------------- */
+.today-view {
+  margin: 0 20px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.today-header {
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.today-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.3px;
+  margin-bottom: 4px;
+}
+
+.today-count {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.today-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.today-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  background: var(--bg);
+  transition: all var(--transition);
+}
+
+.today-item:hover {
+  border-color: var(--primary-light);
+  box-shadow: var(--shadow-xs);
+}
+
+.today-item.done .today-title-text {
+  text-decoration: line-through;
+  color: var(--done-text);
+}
+
+.today-item.done {
+  opacity: 0.7;
+}
+
+.today-check {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+}
+
+.today-check-box {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-xs);
+  border: 2px solid var(--border);
+  background: var(--surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: all var(--transition);
+}
+
+.today-check:hover .today-check-box {
+  border-color: var(--primary-light);
+}
+
+.today-item.done .today-check-box {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.today-check:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+.today-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  border: none;
+  background: none;
+  padding: 4px 0;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font);
+  color: var(--text);
+  min-height: 32px;
+}
+
+.today-title-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  word-break: break-word;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.today-goal-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: var(--radius-xl);
+  flex-shrink: 0;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.today-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.today-empty p {
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.today-add {
+  width: 100%;
+  justify-content: center;
+  padding: 12px;
+  font-size: 14px;
+}
+
+@media (max-width: 720px) {
+  .today-view {
+    margin: 0 10px 16px;
+    padding: 18px;
+  }
+
+  .today-title {
+    font-size: 17px;
+  }
+
+  .today-goal-pill {
+    max-width: 100px;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -1311,6 +1491,63 @@ button:focus-visible {
   border-radius: var(--radius-sm);
   margin-bottom: 12px;
   line-height: 1.4;
+}
+
+.auth-stay {
+  margin-bottom: 8px;
+}
+
+.auth-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+  padding: 6px 2px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.auth-checkbox input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--bg);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--transition);
+  position: relative;
+}
+
+.auth-checkbox input[type="checkbox"]:hover {
+  border-color: var(--primary-light);
+}
+
+.auth-checkbox input[type="checkbox"]:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.auth-checkbox input[type="checkbox"]:checked::after {
+  content: '';
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.auth-checkbox input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 @media (max-width: 420px) {

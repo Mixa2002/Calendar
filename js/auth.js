@@ -1,4 +1,4 @@
-import { supabase } from './supabase.js';
+import { supabase, setAuthPersistence } from './supabase.js';
 
 export function renderAuthScreen(initialError = '') {
   const container = document.getElementById('auth-screen');
@@ -27,6 +27,12 @@ export function renderAuthScreen(initialError = '') {
           <label for="auth-password">Password</label>
           <input type="password" id="auth-password" required placeholder="Min 6 characters" minlength="6" autocomplete="current-password">
         </div>
+        <div class="form-group auth-stay" id="auth-stay-group">
+          <label class="auth-checkbox">
+            <input type="checkbox" id="auth-stay" checked>
+            <span>Stay signed in</span>
+          </label>
+        </div>
         <div id="auth-error" class="auth-error" style="display:none"></div>
         <button type="submit" class="btn btn-primary auth-submit" id="auth-submit">Log In</button>
       </form>
@@ -41,6 +47,7 @@ export function renderAuthScreen(initialError = '') {
       container.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === mode));
       document.getElementById('auth-submit').textContent = mode === 'login' ? 'Log In' : 'Sign Up';
       document.getElementById('auth-password').setAttribute('autocomplete', mode === 'login' ? 'current-password' : 'new-password');
+      document.getElementById('auth-stay-group').style.display = mode === 'login' ? '' : 'none';
       hideError();
     });
   });
@@ -58,8 +65,11 @@ export function renderAuthScreen(initialError = '') {
     let result;
     try {
       if (mode === 'login') {
+        const stay = document.getElementById('auth-stay').checked;
+        setAuthPersistence(stay);
         result = await supabase.auth.signInWithPassword({ email, password });
       } else {
+        setAuthPersistence(true);
         result = await supabase.auth.signUp({ email, password });
       }
     } catch (err) {

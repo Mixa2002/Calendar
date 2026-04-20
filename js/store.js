@@ -22,9 +22,26 @@ export const COLOR_NAMES = {
 // In-memory cache; rendering reads from here synchronously.
 let goalsCache = [];
 let tasksCache = [];
+let tasksByDate = new Map();
+let tasksByGoal = new Map();
 
 function throwIfError(error, message) {
-  if (error) throw new Error(message);
+  if (error) {
+    console.error(message, error);
+    throw new Error(message, { cause: error });
+  }
+}
+
+function rebuildTaskIndexes() {
+  tasksByDate = new Map();
+  tasksByGoal = new Map();
+  for (const t of tasksCache) {
+    if (!tasksByDate.has(t.date)) tasksByDate.set(t.date, []);
+    tasksByDate.get(t.date).push(t);
+    const key = t.goalId || '__unlinked__';
+    if (!tasksByGoal.has(key)) tasksByGoal.set(key, []);
+    tasksByGoal.get(key).push(t);
+  }
 }
 
 async function requireUser() {
@@ -61,6 +78,8 @@ export async function refreshData() {
     done: t.done,
     goalId: t.goal_id,
   }));
+
+  rebuildTaskIndexes();
 }
 
 // --- Synchronous reads (from cache) ---
@@ -78,15 +97,15 @@ export function getGoalById(id) {
 }
 
 export function getTasksForDate(dateStr) {
-  return tasksCache.filter(t => t.date === dateStr);
+  return tasksByDate.get(dateStr) || [];
 }
 
 export function getTasksForGoal(goalId) {
-  return tasksCache.filter(t => t.goalId === goalId);
+  return tasksByGoal.get(goalId) || [];
 }
 
 export function getUnlinkedTasks() {
-  return tasksCache.filter(t => !t.goalId);
+  return tasksByGoal.get('__unlinked__') || [];
 }
 
 export function getGoalCompletion(goalId) {
@@ -156,7 +175,15 @@ export async function deleteTask(id) {
 export async function toggleTask(id) {
   const task = tasksCache.find(t => t.id === id);
   if (!task) throw new Error('Task no longer exists.');
-  const { error } = await supabase.from('tasks').update({ done: !task.done }).eq('id', id);
+  const { data, error } = await supabase
+    .from('tasks')
+    .update({ done: !task.done })
+    .eq('id', id)
+    .eq('done', task.done)
+    .select();
   throwIfError(error, 'Failed to update task.');
   await refreshData();
+  if (!data || data.length === 0) {
+    throw new Error('Task was changed on another device. Refreshed to latest state.');
+  }
 }

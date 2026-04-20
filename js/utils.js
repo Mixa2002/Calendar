@@ -49,6 +49,10 @@ export function getMonthLabel(date) {
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
+export function formatFullDate(date) {
+  return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+}
+
 export function sanitizeColor(color) {
   return /^#[0-9a-fA-F]{3,8}$/.test(color) ? color : '#546B41';
 }

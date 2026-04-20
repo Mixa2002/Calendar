@@ -1,4 +1,4 @@
-import { formatDate, getDaysInRange, getMonday, getMonthLabel, isToday, escapeHtml, sanitizeColor, getContrastTextColor, announce, showAppMessage, clearAppMessage } from './utils.js';
+import { formatDate, formatFullDate, getDaysInRange, getMonday, getMonthLabel, isToday, escapeHtml, sanitizeColor, getContrastTextColor, announce, showAppMessage, clearAppMessage } from './utils.js';
 import { getTasksForDate, toggleTask, getGoalById } from './store.js';
 import { openTaskModal } from './modal.js';
 import { renderDashboard } from './dashboard.js';
@@ -12,6 +12,7 @@ export function renderCalendar() {
 
   let html = '<div class="calendar-toolbar">';
   html += '<div class="view-toggle" role="group" aria-label="Calendar view">';
+  html += `<button class="${viewMode === 'today' ? 'active' : ''}" data-mode="today" aria-pressed="${viewMode === 'today'}">Today</button>`;
   html += `<button class="${viewMode === '3weeks' ? 'active' : ''}" data-mode="3weeks" aria-pressed="${viewMode === '3weeks'}">3 Weeks</button>`;
   html += `<button class="${viewMode === 'month' ? 'active' : ''}" data-mode="month" aria-pressed="${viewMode === 'month'}">Month</button>`;
   html += '</div>';
@@ -23,7 +24,7 @@ export function renderCalendar() {
     const label = viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     html += '<div class="month-nav">';
     html += '<button id="month-prev" aria-label="Previous month">&#8249;</button>';
-    html += `<span class="month-label">${label}</span>`;
+    html += `<span class="month-label">${escapeHtml(label)}</span>`;
     html += '<button id="month-next" aria-label="Next month">&#8250;</button>';
     if (monthOffset !== 0) {
       html += '<button class="btn-today" id="month-today">Today</button>';
@@ -35,8 +36,10 @@ export function renderCalendar() {
 
   if (viewMode === '3weeks') {
     html += renderThreeWeeks(todayStr);
-  } else {
+  } else if (viewMode === 'month') {
     html += renderMonth(todayStr);
+  } else {
+    html += renderToday(todayStr);
   }
 
   container.innerHTML = html;
@@ -64,13 +67,13 @@ function renderThreeWeeks(todayStr) {
   const months = new Set(days.map(d => getMonthLabel(d)));
   const headerText = [...months].join(' / ');
 
-  let html = `<h2 class="calendar-header">${headerText}</h2>`;
+  let html = `<h2 class="calendar-header">${escapeHtml(headerText)}</h2>`;
   html += '<div class="calendar-grid" role="grid" aria-label="Calendar">';
   html += dayLabelsHtml();
 
   for (let i = 0; i < days.length; i++) {
     if (i % 7 === 0) {
-      html += `<div class="week-label" role="row">${getWeekLabel(days[i])}</div>`;
+      html += `<div class="week-label" role="row">${escapeHtml(getWeekLabel(days[i]))}</div>`;
     }
     const isAlt = Math.floor(i / 7) % 2 === 1;
     html += renderDayCell(days[i], todayStr, false, isAlt);
@@ -110,6 +113,56 @@ function renderMonth(todayStr) {
   }
 
   html += '</div>';
+  return html;
+}
+
+function renderToday(todayStr) {
+  const today = new Date();
+  const tasks = getTasksForDate(todayStr);
+  const headerLabel = formatFullDate(today);
+
+  let html = '<section class="today-view" aria-label="Today\'s tasks">';
+  html += '<div class="today-header">';
+  html += `<h2 class="today-title">${escapeHtml(headerLabel)}</h2>`;
+  html += `<p class="today-count">${tasks.length === 0 ? 'Nothing scheduled' : `${tasks.length} task${tasks.length > 1 ? 's' : ''}`}</p>`;
+  html += '</div>';
+
+  if (tasks.length === 0) {
+    html += `
+      <div class="today-empty">
+        <p>No tasks for today</p>
+        <p class="empty-hint">Enjoy the day, or add something below.</p>
+      </div>`;
+  } else {
+    html += '<ul class="today-list" role="list">';
+    for (const task of tasks) {
+      const goal = task.goalId ? getGoalById(task.goalId) : null;
+      const doneClass = task.done ? ' done' : '';
+      const goalPill = goal
+        ? `<span class="today-goal-pill" style="background:${sanitizeColor(goal.color)};color:${getContrastTextColor(goal.color)}">${escapeHtml(goal.name)}</span>`
+        : '';
+      html += `
+        <li class="today-item${doneClass}" data-task-id="${task.id}">
+          <button class="today-check" data-task-id="${task.id}"
+                  role="checkbox" aria-checked="${task.done}"
+                  aria-label="${escapeHtml(task.title)}${task.done ? ' (completed)' : ''}">
+            <span class="today-check-box" aria-hidden="true">
+              ${task.done ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
+            </span>
+          </button>
+          <button class="today-body" data-edit-task="${task.id}" aria-label="Edit task: ${escapeHtml(task.title)}">
+            <span class="today-title-text">${escapeHtml(task.title)}</span>
+            ${goalPill}
+          </button>
+        </li>`;
+    }
+    html += '</ul>';
+  }
+
+  html += '<button class="btn btn-primary today-add" id="today-add-btn">';
+  html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+  html += 'Add task for today</button>';
+  html += '</section>';
   return html;
 }
 
@@ -155,7 +208,7 @@ function renderDayCell(day, todayStr, isOtherMonth, isAlt = false) {
          aria-label="${dayLabel}${taskCount}">
       <div class="day-number">${day.getDate()}</div>
       <div class="day-tasks">${tasksHtml}</div>
-      <div class="day-add" role="button" tabindex="0" aria-label="Add task on ${dateStr}">+ add task</div>
+      <div class="day-add" aria-hidden="true">+ add task</div>
     </div>`;
 }
 
@@ -164,8 +217,43 @@ function wireEvents(container) {
   container.querySelectorAll('.view-toggle button').forEach(btn => {
     btn.addEventListener('click', () => {
       viewMode = btn.dataset.mode;
-      if (viewMode === '3weeks') monthOffset = 0;
+      if (viewMode !== 'month') monthOffset = 0;
       renderCalendar();
+    });
+  });
+
+  // Today view
+  const todayAddBtn = container.querySelector('#today-add-btn');
+  if (todayAddBtn) {
+    todayAddBtn.addEventListener('click', () => {
+      openTaskModal({ date: formatDate(new Date()) });
+    });
+  }
+
+  container.querySelectorAll('.today-check').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (btn.disabled) return;
+      btn.disabled = true;
+      const wasDone = btn.getAttribute('aria-checked') === 'true';
+      try {
+        await toggleTask(btn.dataset.taskId);
+        clearAppMessage();
+        announce(wasDone ? 'Task marked as incomplete' : 'Task marked as complete');
+        renderCalendar();
+        renderDashboard();
+      } catch (err) {
+        showAppMessage(err.message || 'Failed to update task.');
+        announce('Failed to update task');
+        btn.disabled = false;
+      }
+    });
+  });
+
+  container.querySelectorAll('.today-body').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openTaskModal({ taskId: btn.dataset.editTask });
     });
   });
 
@@ -181,27 +269,14 @@ function wireEvents(container) {
   container.querySelectorAll('.calendar-day').forEach(cell => {
     const dateStr = cell.dataset.date;
 
-    const addBtn = cell.querySelector('.day-add');
-    const openAdd = (e) => {
-      e.stopPropagation();
-      openTaskModal({ date: dateStr });
-    };
-    addBtn.addEventListener('click', openAdd);
-    addBtn.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        openAdd(e);
-      }
-    });
-
     cell.addEventListener('click', (e) => {
-      if (e.target.closest('.task-pill') || e.target.closest('.day-add')) return;
+      if (e.target.closest('.task-pill')) return;
       openTaskModal({ date: dateStr });
     });
 
     cell.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
-        if (!e.target.closest('.task-pill') && !e.target.closest('.day-add')) {
+        if (!e.target.closest('.task-pill')) {
           e.preventDefault();
           openTaskModal({ date: dateStr });
         }
@@ -214,6 +289,8 @@ function wireEvents(container) {
     const handleToggle = async (e) => {
       if (e.target.closest('.task-edit')) return;
       e.stopPropagation();
+      if (pill.dataset.pending === '1') return;
+      pill.dataset.pending = '1';
       pill.classList.add('just-toggled');
       setTimeout(() => pill.classList.remove('just-toggled'), 300);
       const wasDone = pill.getAttribute('aria-checked') === 'true';
@@ -226,6 +303,7 @@ function wireEvents(container) {
       } catch (err) {
         showAppMessage(err.message || 'Failed to update task.');
         announce('Failed to update task');
+        pill.dataset.pending = '';
       }
     };
 
