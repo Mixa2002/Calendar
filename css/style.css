@@ -1829,27 +1829,16 @@ button:focus-visible {
     transition: background var(--transition), transform var(--transition);
   }
 
-  .bottom-nav-tab.active .bottom-nav-pill {
-    background: var(--primary-lightest);
-  }
-
   .bottom-nav-tab:active .bottom-nav-pill {
     transform: scale(0.94);
   }
 
-  /* ── Icon — active tab gets bolder stroke and slightly larger ─────────── */
+  /* ── Icon ────────────────────────────────────────────────────────────── */
   .bottom-nav-icon {
     flex-shrink: 0;
     width: 22px;
     height: 22px;
     stroke-width: 2;
-    transition: width var(--transition), height var(--transition), stroke-width var(--transition);
-  }
-
-  .bottom-nav-tab.active .bottom-nav-icon {
-    width: 24px;
-    height: 24px;
-    stroke-width: 2.5;
   }
 
   /* ── Label ───────────────────────────────────────────────────────────── */
@@ -1858,11 +1847,6 @@ button:focus-visible {
     font-weight: 500;
     line-height: 1;
     letter-spacing: 0.1px;
-    transition: font-weight var(--transition);
-  }
-
-  .bottom-nav-tab.active .bottom-nav-label {
-    font-weight: 700;
   }
 
   /* ── Panel visibility controlled by JS activeTab ─────────────────────── */

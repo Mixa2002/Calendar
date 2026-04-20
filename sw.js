@@ -11,7 +11,7 @@
  * The activate handler deletes all caches whose name doesn't match.
  */
 
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const STATIC_CACHE  = `calendar-static-${CACHE_VERSION}`;
 const FONT_CACHE    = `calendar-fonts-${CACHE_VERSION}`;
 
