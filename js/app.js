@@ -122,17 +122,59 @@ document.getElementById('btn-logout').addEventListener('click', async () => {
   }
 });
 
-// Initial check
+// Initial check — kick off the session lookup and, if a cached session already
+// exists in localStorage, start the data fetch in parallel so both complete at
+// roughly the same time instead of sequentially.
 try {
-  const { data: { session }, error } = await supabase.auth.getSession();
+  const sessionPromise = supabase.auth.getSession();
+
+  // Supabase stores the active session in localStorage and resolves
+  // getSession() synchronously on the microtask queue when the user is already
+  // logged in.  Peeking at localStorage lets us fire refreshData() before
+  // getSession() settles so the two network calls race in parallel.
+  const cachedSessionKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+  let earlyRefresh = null;
+  if (cachedSessionKey) {
+    try {
+      const stored = JSON.parse(localStorage.getItem(cachedSessionKey));
+      if (stored && stored.access_token) {
+        earlyRefresh = refreshData();
+      }
+    } catch (_) { /* malformed entry — ignore */ }
+  }
+
+  const { data: { session }, error } = await sessionPromise;
   if (error) throw error;
-  await handleSession(session);
+
+  if (session) {
+    showApp();
+    clearAppMessage();
+    try {
+      // Await the early fetch if it was started; otherwise fall back to a fresh one.
+      if (earlyRefresh) {
+        await earlyRefresh;
+      } else {
+        await refreshData();
+      }
+      renderCalendar();
+      renderDashboard();
+      clearAppMessage();
+    } catch (err) {
+      showAppMessage(err.message || 'Unable to load your data right now.');
+      renderLoadError(err.message || 'Unable to load your data right now.');
+    }
+  } else {
+    clearAppMessage();
+    showAuthScreen();
+    renderAuthScreen();
+  }
 } catch (err) {
   showAuthScreen();
   renderAuthScreen(err.message || 'Unable to verify your session. Please try again.');
 }
 
-// Auth state listener
+// Auth state listener — subsequent sign-in / sign-out events still go through
+// the normal serial path (parallelism only helps the initial cold load).
 supabase.auth.onAuthStateChange(async (_event, session) => {
   await handleSession(session);
 });

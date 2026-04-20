@@ -236,16 +236,22 @@ function wireEvents(container) {
       if (btn.disabled) return;
       btn.disabled = true;
       const wasDone = btn.getAttribute('aria-checked') === 'true';
+      // toggleTask flips the cache synchronously before any await, so we can
+      // re-render immediately for an instant response on mobile networks.
+      const togglePromise = toggleTask(btn.dataset.taskId);
+      clearAppMessage();
+      announce(wasDone ? 'Task marked as incomplete' : 'Task marked as complete');
+      renderCalendar();
+      renderDashboard();
       try {
-        await toggleTask(btn.dataset.taskId);
-        clearAppMessage();
-        announce(wasDone ? 'Task marked as incomplete' : 'Task marked as complete');
-        renderCalendar();
-        renderDashboard();
+        await togglePromise;
       } catch (err) {
+        // Network write failed — store rolled back the cache, so re-render to
+        // restore the correct visual state.
         showAppMessage(err.message || 'Failed to update task.');
         announce('Failed to update task');
-        btn.disabled = false;
+        renderCalendar();
+        renderDashboard();
       }
     });
   });
@@ -294,16 +300,22 @@ function wireEvents(container) {
       pill.classList.add('just-toggled');
       setTimeout(() => pill.classList.remove('just-toggled'), 300);
       const wasDone = pill.getAttribute('aria-checked') === 'true';
+      // toggleTask flips the cache synchronously before any await, so we can
+      // re-render immediately for an instant response on mobile networks.
+      const togglePromise = toggleTask(pill.dataset.taskId);
+      clearAppMessage();
+      announce(wasDone ? 'Task marked as incomplete' : 'Task marked as complete');
+      renderCalendar();
+      renderDashboard();
       try {
-        await toggleTask(pill.dataset.taskId);
-        clearAppMessage();
-        announce(wasDone ? 'Task marked as incomplete' : 'Task marked as complete');
-        renderCalendar();
-        renderDashboard();
+        await togglePromise;
       } catch (err) {
+        // Network write failed — store rolled back the cache, so re-render to
+        // restore the correct visual state.
         showAppMessage(err.message || 'Failed to update task.');
         announce('Failed to update task');
-        pill.dataset.pending = '';
+        renderCalendar();
+        renderDashboard();
       }
     };
 

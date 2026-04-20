@@ -1298,7 +1298,7 @@ input, textarea, select {
 
   .view-toggle button {
     padding: 8px 14px;
-    min-height: 38px;
+    min-height: 44px;
   }
 
   /* Goal cards - larger touch targets */
@@ -1319,8 +1319,22 @@ input, textarea, select {
   }
 
   .color-swatch {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .today-check {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .today-item {
+    min-height: 52px;
+    align-items: center;
+  }
+
+  .today-body {
+    min-height: 44px;
   }
 }
 

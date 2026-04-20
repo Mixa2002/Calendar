@@ -175,15 +175,24 @@ export async function deleteTask(id) {
 export async function toggleTask(id) {
   const task = tasksCache.find(t => t.id === id);
   if (!task) throw new Error('Task no longer exists.');
-  const { data, error } = await supabase
-    .from('tasks')
-    .update({ done: !task.done })
-    .eq('id', id)
-    .eq('done', task.done)
-    .select();
-  throwIfError(error, 'Failed to update task.');
-  await refreshData();
-  if (!data || data.length === 0) {
-    throw new Error('Task was changed on another device. Refreshed to latest state.');
+  const originalDone = task.done;
+  // Optimistic update — flip in cache immediately so callers can re-render
+  // without waiting for the network round-trip.
+  task.done = !task.done;
+  rebuildTaskIndexes();
+  try {
+    const { data, error } = await supabase
+      .from('tasks').update({ done: task.done })
+      .eq('id', id).eq('done', originalDone).select();
+    throwIfError(error, 'Failed to update task.');
+    await refreshData();
+    if (!data || data.length === 0) {
+      throw new Error('Task was changed on another device. Refreshed to latest state.');
+    }
+  } catch (err) {
+    // Roll back to the exact pre-toggle state before re-throwing.
+    task.done = originalDone;
+    rebuildTaskIndexes();
+    throw err;
   }
 }
