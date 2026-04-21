@@ -144,15 +144,24 @@ export function openTaskModal({ date = '', taskId = null } = {}) {
   document.getElementById('btn-cancel').addEventListener('click', closeModal);
 
   if (isEdit) {
-    document.getElementById('btn-delete-task').addEventListener('click', async () => {
-      if (!confirm('Delete this task? This cannot be undone.')) return;
-      hideModalError();
-      try {
-        await deleteTask(taskId);
-        closeModal({ mutated: true });
-      } catch (err) {
-        showModalError(err.message);
-      }
+    document.getElementById('btn-delete-task').addEventListener('click', () => {
+      const actions = getContent().querySelector('.modal-actions');
+      actions.innerHTML = `
+        <span class="delete-confirm-text">Delete this task?</span>
+        <button type="button" class="btn btn-ghost" id="btn-cancel-delete">Keep it</button>
+        <button type="button" class="btn btn-danger" id="btn-confirm-delete">Yes, delete</button>
+      `;
+      document.getElementById('btn-cancel-delete').addEventListener('click', closeModal);
+      document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
+        hideModalError();
+        document.getElementById('btn-confirm-delete').disabled = true;
+        try {
+          await deleteTask(taskId);
+          closeModal({ mutated: true });
+        } catch (err) {
+          showModalError(err.message);
+        }
+      });
     });
   }
 }

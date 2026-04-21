@@ -1151,6 +1151,13 @@ input, textarea, select {
   margin-right: auto;
 }
 
+.delete-confirm-text {
+  margin-right: auto;
+  font-size: 13px;
+  color: var(--text-muted);
+  align-self: center;
+}
+
 /* --------------------------------------------------------------------------
    27. Responsive Design - Tablet
    -------------------------------------------------------------------------- */
