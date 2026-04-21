@@ -18,21 +18,26 @@ function getContent() { return document.getElementById('modal-content'); }
 export function closeModal({ mutated = didMutate } = {}) {
   const overlay = getOverlay();
   const content = getContent();
-  if (!overlay?.classList.contains('open')) return;
+  const isOpen = overlay?.classList.contains('open');
 
-  overlay.classList.remove('open');
-  content.innerHTML = '';
-  document.getElementById('app-container')?.removeAttribute('aria-hidden');
-  if (focusTrapCleanup) {
-    focusTrapCleanup();
-    focusTrapCleanup = null;
+  if (isOpen) {
+    overlay.classList.remove('open');
+    content.innerHTML = '';
+    document.getElementById('app-container')?.removeAttribute('aria-hidden');
+    if (focusTrapCleanup) {
+      focusTrapCleanup();
+      focusTrapCleanup = null;
+    }
+    if (triggerElement) {
+      triggerElement.focus();
+      triggerElement = null;
+    }
   }
-  if (triggerElement) {
-    triggerElement.focus();
-    triggerElement = null;
-  }
+
   didMutate = false;
-  if (onCloseCallback) onCloseCallback(mutated);
+  // Always fire the callback when mutated — the user may have manually closed
+  // the modal while the async save was in-flight, so we must still re-render.
+  if (mutated && onCloseCallback) onCloseCallback(true);
 }
 
 function openOverlay() {
@@ -125,8 +130,9 @@ export function openTaskModal({ date = '', taskId = null } = {}) {
     const dateVal = document.getElementById('task-date').value;
     const goalId = document.getElementById('task-goal').value || null;
     if (!title || !dateVal) return;
-    const submitBtn = e.submitter;
-    if (submitBtn) submitBtn.disabled = true;
+    const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
+    const originalText = submitBtn?.textContent;
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = isEdit ? 'Saving…' : 'Adding…'; }
 
     try {
       if (isEdit) {
@@ -136,7 +142,7 @@ export function openTaskModal({ date = '', taskId = null } = {}) {
       }
       closeModal({ mutated: true });
     } catch (err) {
-      if (submitBtn) submitBtn.disabled = false;
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = originalText; }
       showModalError(err.message);
     }
   });
@@ -263,8 +269,9 @@ export function openGoalModal({ goalId = null } = {}) {
     const name = document.getElementById('goal-name').value.trim();
     const color = document.getElementById('goal-color').value;
     if (!name) return;
-    const submitBtn = e.submitter;
-    if (submitBtn) submitBtn.disabled = true;
+    const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
+    const originalText = submitBtn?.textContent;
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = isEdit ? 'Saving…' : 'Creating…'; }
 
     try {
       if (isEdit) {
@@ -274,7 +281,7 @@ export function openGoalModal({ goalId = null } = {}) {
       }
       closeModal({ mutated: true });
     } catch (err) {
-      if (submitBtn) submitBtn.disabled = false;
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = originalText; }
       showModalError(err.message);
     }
   });

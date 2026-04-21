@@ -45,12 +45,14 @@ function rebuildTaskIndexes() {
 }
 
 async function requireUser() {
-  const { data, error } = await supabase.auth.getUser();
+  // getSession() reads from the local cache — no network round-trip.
+  // autoRefreshToken keeps the token fresh, so the cached session is always valid.
+  const { data, error } = await supabase.auth.getSession();
   throwIfError(error, 'Failed to verify your session.');
-  if (!data.user) {
+  if (!data.session?.user) {
     throw new Error('Your session expired. Please log in again.');
   }
-  return data.user;
+  return data.session.user;
 }
 
 // --- Data loading (call on init and after mutations) ---
@@ -125,7 +127,6 @@ export async function addGoal(name, color = GOAL_COLORS[0]) {
     user_id: user.id,
   });
   throwIfError(error, 'Failed to create goal.');
-  await refreshData();
 }
 
 export async function updateGoal(id, fields) {
@@ -134,13 +135,11 @@ export async function updateGoal(id, fields) {
   if (fields.color !== undefined) updates.color = sanitizeColor(fields.color);
   const { error } = await supabase.from('goals').update(updates).eq('id', id);
   throwIfError(error, 'Failed to update goal.');
-  await refreshData();
 }
 
 export async function deleteGoal(id) {
   const { error } = await supabase.from('goals').delete().eq('id', id);
   throwIfError(error, 'Failed to delete goal.');
-  await refreshData();
 }
 
 export async function addTask(title, date, goalId = null) {
@@ -152,7 +151,6 @@ export async function addTask(title, date, goalId = null) {
     user_id: user.id,
   });
   throwIfError(error, 'Failed to create task.');
-  await refreshData();
 }
 
 export async function updateTask(id, fields) {
@@ -163,13 +161,11 @@ export async function updateTask(id, fields) {
   if (fields.done !== undefined) updates.done = fields.done;
   const { error } = await supabase.from('tasks').update(updates).eq('id', id);
   throwIfError(error, 'Failed to update task.');
-  await refreshData();
 }
 
 export async function deleteTask(id) {
   const { error } = await supabase.from('tasks').delete().eq('id', id);
   throwIfError(error, 'Failed to delete task.');
-  await refreshData();
 }
 
 export async function toggleTask(id) {
